@@ -30,28 +30,30 @@ class ForgotPasswordController extends Controller
     /**
      * Reset the user's password.
      */
-    public function reset(ResetPasswordRequest $request,string $token): JsonResponse {
+    public function reset(
+        ResetPasswordRequest $request,
+        string $token
+    ): JsonResponse {
 
         $status = Password::reset(
             [
                 'email' => $request->email,
                 'password' => $request->password,
                 'password_confirmation' => $request->password_confirmation,
+                'token' => $token,
             ],
             function ($user, $password) {
-                // Update password
+
                 $user->forceFill([
                     'password' => $password,
                 ])->save();
 
                 event(new PasswordReset($user));
-            },
-            $token
+            }
         );
 
 
         if ($status !== Password::PASSWORD_RESET) {
-
             return response()->json([
                 'status' => $status,
                 'message' => __($status),
